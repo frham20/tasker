@@ -2,6 +2,8 @@
 Tasks
 """
 from enum import Flag
+from string import Template
+import datetime
 import os
 import re
 import zipfile
@@ -116,8 +118,11 @@ class TaskArchiveCreate(Task):
         self.archive_name = archive_name
         self.exclude = exclude
 
+
     def _do_work(self):
-        self.logger.info('Creating archive %s\\%s.zip...', self.dst, self.archive_name)
+        formatted_name = TaskArchiveCreate._format_archive_name(self.archive_name)
+
+        self.logger.info('Creating archive %s\\%s.zip...', self.dst, formatted_name)
         filenames = []
         for dirpath, _, files in os.walk(self.src, topdown=True, onerror=None, followlinks=True):
             for file in files:
@@ -131,10 +136,19 @@ class TaskArchiveCreate(Task):
                 if not skip_file:
                     filenames.append(fullname)
         os.makedirs(self.dst, mode=0o777, exist_ok=True)
-        zip_filename = os.path.join(self.dst, '{}.zip'.format(self.archive_name))
+        zip_filename = os.path.join(self.dst, '{}.zip'.format(formatted_name))
         with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_LZMA) as zf:
             for filename in filenames:
                 zf.write(filename)
+
+
+    @staticmethod
+    def _format_archive_name(name):
+        cur_time = datetime.datetime.now()
+        tpl = Template(name)
+        return tpl.substitute(YYYY=cur_time.year,
+                              DD='{:02d}'.format(cur_time.day),
+                              MM='{:02d}'.format(cur_time.month))
 
     @staticmethod
     def factory_name():
