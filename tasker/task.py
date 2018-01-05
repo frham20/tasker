@@ -28,8 +28,9 @@ class Task(object):
         self.status = TaskStatus.RUNNING
         try:
             self._do_work()
-        except:
+        except Exception as ex:
             self.status = TaskStatus.FAILED
+            self.logger.exception(ex)
         else:
             self.status = TaskStatus.COMPLETED
         return self.status
@@ -129,9 +130,8 @@ class TaskArchiveCreate(Task):
                             break
                 if not skip_file:
                     filenames.append(fullname)
-
+        os.makedirs(self.dst, mode=0o777, exist_ok=True)
         zip_filename = os.path.join(self.dst, '{}.zip'.format(self.archive_name))
-        #os.makedirs(zip_filename, 0o777, True)
         with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_LZMA) as zf:
             for filename in filenames:
                 zf.write(filename)

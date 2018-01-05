@@ -2,12 +2,18 @@
 Main
 """
 import sys
-import os
 import logging
+import argparse
 from tasker.config import load_config, run_config
 
 def main():
     """Package ran as exec"""
+
+    parser = argparse.ArgumentParser(description='Executes a serie of tasks')
+    parser.add_argument('filename', type=str,
+                        help='The filename of the JSON file containing the tasks to execute')
+    args = parser.parse_args()
+
     logging.basicConfig(
         stream=sys.stdout,
         level=logging.INFO,
@@ -15,13 +21,18 @@ def main():
     )
 
     logger = logging.getLogger(__name__)
-    logger.info("Loading config file...")
 
-    config_filename = os.path.join(os.getcwd(), "config.json")
-    cfg = load_config(config_filename)
-    run_config(cfg)
+    try:
+        logger.info("Loading config file...")
+        cfg = load_config(args.filename)
 
-    logger.info("Done!")
+        logger.info("Running configuration...")
+        run_config(cfg)
+
+        logger.info("Done!")
+    except Exception as ex:
+        logger.exception(ex)
+
 
 assert __name__ == '__main__'
 main()
