@@ -74,10 +74,8 @@ def _list_filenames(path, recurse=False):
     filenames = []
     if recurse:
         filenames = [os.path.join(dirpath, os.path.normpath(f))
-                     for dirpath, _, files in os.walk(path,
-                                                      topdown=True,
-                                                      onerror=None,
-                                                      followlinks=True)
+                     for dirpath, _, files in
+                     os.walk(path, topdown=True, onerror=None, followlinks=True)
                      for f in files]
     else:
         filenames = [os.path.join(path, file) for file in os.listdir(path)]
@@ -112,7 +110,8 @@ class TaskDirectoryMirror(Task):
 
     def _do_work(self):
         self.logger.info('Copying %s in %s...', self.src, self.dst)
-        dirsync.sync(self.src, self.dst, 'sync', create=True, purge=True, verbose=False, logger=self.logger)
+        dirsync.sync(self.src, self.dst, 'sync', create=True,
+                     purge=True, verbose=False, logger=self.logger)
 
     @staticmethod
     def factory_name():
@@ -132,7 +131,8 @@ class TaskDirectoryCopy(Task):
 
     def _do_work(self):
         self.logger.info('Copying %s in %s...', self.src, self.dst)
-        dirsync.sync(self.src, self.dst, 'sync', create=True, purge=False, verbose=False, logger=self.logger)
+        dirsync.sync(self.src, self.dst, 'sync', create=True,
+                     purge=False, verbose=False, logger=self.logger)
 
     @staticmethod
     def factory_name():
