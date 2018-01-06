@@ -22,7 +22,7 @@ Here's an example of a config file:
     "tasks":[ 
         {
             "file-purge":{
-                "path":"e:\\Documents\\_archive\\",
+                "path":"e:\\_archive\\",
                 "older_than":"P10D",
                 "include":["Documents_.*\\.zip"]
             }
@@ -30,9 +30,9 @@ Here's an example of a config file:
         {
             "archive-create":{ 
                 "archive_name":"Documents_${YYYY}_${MM}_${DD}", 
-                "dst":"e:\\Documents\\_archive",
+                "dst":"e:\\_archive",
                 "src":"e:\\Documents", 
-                "exclude":[ "\\\\_archive\\\\"]
+                "exclude":["\\\\_archive\\\\"]
             }
         },
         { 
