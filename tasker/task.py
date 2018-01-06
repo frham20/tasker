@@ -203,6 +203,9 @@ class TaskFilePurge(Task):
     def _do_work(self):
         self.logger.info('Purging files in %s...', self.path)
 
+        if not os.path.exists(self.path):
+            return
+
         filenames = _list_filenames(self.path, recurse=self.recurse)
         filenames = _filter_filenames(filenames, include=self.include, exclude=self.exclude)
 
