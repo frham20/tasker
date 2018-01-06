@@ -9,6 +9,7 @@ import re
 import zipfile
 import logging
 import dirsync
+import isodate
 
 class TaskStatus(Flag):
     """The status of a task"""
@@ -191,13 +192,28 @@ class TaskFilePurge(Task):
         self.recurse = recurse
         self.include = include
         self.exclude = exclude
-        self.older_than = older_than
+
+        # older_than should be a timedelta or a string using the ISO 8601 standard for Durations
+        # see https://en.wikipedia.org/wiki/ISO_8601
+        if isinstance(older_than, str):
+            self.older_than = isodate.parse_duration(older_than)
+        else:
+            self.older_than = older_than
 
     def _do_work(self):
         self.logger.info('Purging files in %s...', self.path)
 
         filenames = _list_filenames(self.path, recurse=self.recurse)
         filenames = _filter_filenames(filenames, include=self.include, exclude=self.exclude)
+
+        if self.older_than is not None:
+            max_seconds = (datetime.datetime.now() - self.older_than).timestamp()
+            old_filenames = []
+            for filename in filenames:
+                fs = os.lstat(filename)
+                if fs.st_mtime <= max_seconds:
+                    old_filenames.append(filename)
+            filenames = old_filenames
 
         self.logger.info('Removing %d files...', len(filenames))
         for filename in filenames:
