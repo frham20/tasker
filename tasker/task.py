@@ -112,7 +112,7 @@ class TaskDirectoryMirror(Task):
 
     def _do_work(self):
         self.logger.info('Copying %s in %s...', self.src, self.dst)
-        dirsync.sync(self.src, self.dst, 'sync', create=True, purge=True)
+        dirsync.sync(self.src, self.dst, 'sync', create=True, purge=True, verbose=False, logger=self.logger)
 
     @staticmethod
     def factory_name():
@@ -132,7 +132,7 @@ class TaskDirectoryCopy(Task):
 
     def _do_work(self):
         self.logger.info('Copying %s in %s...', self.src, self.dst)
-        dirsync.sync(self.src, self.dst, 'sync', create=True, purge=False)
+        dirsync.sync(self.src, self.dst, 'sync', create=True, purge=False, verbose=False, logger=self.logger)
 
     @staticmethod
     def factory_name():
