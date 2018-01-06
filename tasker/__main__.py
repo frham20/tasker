@@ -47,9 +47,10 @@ class App(object):
         else:
             if self.log_filename is None:
                 cur_date = datetime.datetime.now()
-                self.log_filename = 'tasker_{:4d}_{:02d}_{:02d}.log'.format(cur_date.year,
-                                                                            cur_date.month,
-                                                                            cur_date.day)
+                self.log_filename = 'tasker_{:4d}_{:02d}_{:02d}_T{:02d}_{:02d}_{:02d}.log'.format(
+                    cur_date.year, cur_date.month, cur_date.day,
+                    cur_date.hour, cur_date.minute, cur_date.second)
+
             # Make sure output dir exists
             os.makedirs(self.log_directory, mode=0o777, exist_ok=True)
 
