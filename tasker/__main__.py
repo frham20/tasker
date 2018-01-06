@@ -12,7 +12,7 @@ def main():
     """Package ran as exec"""
 
     # Parse command line args
-    parser = argparse.ArgumentParser(description='Executes a serie of tasks')
+    parser = argparse.ArgumentParser(description='Executes a series of tasks')
     parser.add_argument('filename', type=str,
                         help='The filename of the JSON file containing the tasks to execute')
     args = parser.parse_args()
@@ -43,7 +43,7 @@ def main():
         logger.info("Loading config file...")
         cfg = load_config(args.filename)
 
-        logger.info("Running configuration...")
+        logger.info("Running config tasks...")
         run_config(cfg)
 
         logger.info("Done!")
