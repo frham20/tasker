@@ -69,6 +69,39 @@ def create_task(name, **kwargs):
     return None
 
 
+def _list_filenames(path, recurse=False):
+    filenames = []
+    if recurse:
+        filenames = [os.path.join(dirpath, os.path.normpath(f))
+                     for dirpath, _, files in os.walk(path,
+                                                      topdown=True,
+                                                      onerror=None,
+                                                      followlinks=True)
+                     for f in files]
+    else:
+        filenames = [os.path.join(path, file) for file in os.listdir(path)]
+    return filenames
+
+
+def _filter_filenames(filenames, include=None, exclude=None):
+    filtered_filenames = []
+    for filename in filenames:
+        skip_filename = False
+        if include is not None:
+            for pattern in include:
+                if re.search(pattern, filename) is None:
+                    skip_filename = True
+                    break
+        if exclude is not None:
+            for pattern in exclude:
+                if re.search(pattern, filename) is not None:
+                    skip_filename = True
+                    break
+        if not skip_filename:
+            filtered_filenames.append(filename)
+    return filtered_filenames
+
+
 class TaskDirectoryMirror(Task):
     """Mirror a whole directory tree"""
     def __init__(self, dst, src):
@@ -111,36 +144,27 @@ class TaskDirectoryCopy(Task):
 
 class TaskArchiveCreate(Task):
     """Creates an archive of a whole directory tree"""
-    def __init__(self, archive_name, dst, src, exclude=None):
+    def __init__(self, archive_name, dst, src, include=None, exclude=None):
         super().__init__()
         self.src = src
         self.dst = dst
         self.archive_name = archive_name
+        self.include = include
         self.exclude = exclude
-
 
     def _do_work(self):
         formatted_name = TaskArchiveCreate._format_archive_name(self.archive_name)
 
         self.logger.info('Creating archive %s\\%s.zip...', self.dst, formatted_name)
-        filenames = []
-        for dirpath, _, files in os.walk(self.src, topdown=True, onerror=None, followlinks=True):
-            for file in files:
-                fullname = os.path.join(dirpath, file)
-                skip_file = False
-                if self.exclude is not None:
-                    for exclusion in self.exclude:
-                        if re.search(exclusion, fullname) is not None:
-                            skip_file = True
-                            break
-                if not skip_file:
-                    filenames.append(fullname)
+
+        filenames = _list_filenames(self.src, recurse=True)
+        filenames = _filter_filenames(filenames, include=self.include, exclude=self.exclude)
+
         os.makedirs(self.dst, mode=0o777, exist_ok=True)
         zip_filename = os.path.join(self.dst, '{}.zip'.format(formatted_name))
         with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_LZMA) as zf:
             for filename in filenames:
                 zf.write(filename)
-
 
     @staticmethod
     def _format_archive_name(name):
@@ -157,3 +181,33 @@ class TaskArchiveCreate(Task):
     @staticmethod
     def create(**kwargs):
         return TaskArchiveCreate(**kwargs)
+
+
+class TaskFilePurge(Task):
+    """Delete files based on conditions"""
+    def __init__(self, path, recurse=False, include=None, exclude=None, older_than=None):
+        super().__init__()
+        self.path = path
+        self.recurse = recurse
+        self.include = include
+        self.exclude = exclude
+        self.older_than = older_than
+
+    def _do_work(self):
+        self.logger.info('Purging files in %s...', self.path)
+
+        filenames = _list_filenames(self.path, recurse=self.recurse)
+        filenames = _filter_filenames(filenames, include=self.include, exclude=self.exclude)
+
+        self.logger.info('Removing %d files...', len(filenames))
+        for filename in filenames:
+            self.logger.info('Removing %s', filename)
+            os.remove(filename)
+
+    @staticmethod
+    def factory_name():
+        return 'file-purge'
+
+    @staticmethod
+    def create(**kwargs):
+        return TaskFilePurge(**kwargs)
